@@ -73,11 +73,11 @@
             android:text="Capture" />
 
         <Button
-            android:id="@+id/second_camera"
+            android:id="@+id/rendersavebtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
-            android:text="Second/Caamera" />
+            android:text="Render/Save" />
     </LinearLayout>
 
 </LinearLayout>

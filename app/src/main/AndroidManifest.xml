@@ -25,7 +25,7 @@
         android:screenOrientation="landscape"
         android:theme="@android:style/Theme.NoTitleBar.Fullscreen" >
         <activity
-            android:name="ui.AndroidVideoCaptureExample"
+            android:name="ui.CollageMainActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait">
             <intent-filter>
