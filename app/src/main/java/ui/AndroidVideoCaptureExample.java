@@ -30,9 +30,8 @@ import com.javacodegeeks.androidvideocaptureexample.R;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 
-public class AndroidVideoCaptureExample extends Activity {
+public class                                            AndroidVideoCaptureExample extends Activity {
     private Camera mCamera;
     private CameraPreview mPreview;
     private MediaRecorder mediaRecorder;
@@ -339,6 +338,7 @@ public class AndroidVideoCaptureExample extends Activity {
                 mediaRecorder.stop(); // stop the recording
                 releaseMediaRecorder(); // release the MediaRecorder object
                 Toast.makeText(AndroidVideoCaptureExample.this, "Video captured!", Toast.LENGTH_LONG).show();
+                ((TextView) v).setText("Capture");
                 recording = false;
             } else {
                 if (!prepareMediaRecorder()) {
@@ -362,6 +362,7 @@ public class AndroidVideoCaptureExample extends Activity {
                         }
                     }
                 });
+                ((TextView) v).setText("Stop");
 
                 recording = true;
             }
