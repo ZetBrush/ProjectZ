@@ -21,6 +21,7 @@ import android.view.View.OnClickListener;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -41,13 +42,17 @@ public class CollageMainActivity extends Activity {
     private CameraPreview mPreview;
     private MediaRecorder mediaRecorder;
     private Button capture, switchCamera, renderBtn;
+    ImageButton vidLeft;
+    ImageButton vidRight;
     private Context myContext;
     private LinearLayout cameraPreview;
     private boolean cameraFront = false;
     private int firstSecond = 1;
     private TextView textView;
+    Thread myThread = null;
     int count = 0;
-    long time = 0;
+    int currentCapturedTime;
+    int capturedTime;
     boolean isCaptured=false;
     private RecyclerView recyclerView;
 
@@ -118,6 +123,7 @@ public class CollageMainActivity extends Activity {
     public void initialize() {
 
 
+        capturedTime = 0;
         Display display = getWindowManager().getDefaultDisplay();
         int width = display.getWidth();  // deprecated
         int height = display.getHeight();
@@ -128,6 +134,8 @@ public class CollageMainActivity extends Activity {
         cameraPreview = (LinearLayout) findViewById(R.id.camera_preview);
         cameraPreview2 = (LinearLayout) findViewById(R.id.camera_preview2);
         textView = (TextView) findViewById(R.id.text_view);
+        vidLeft = (ImageButton) findViewById(R.id.vid_left);
+        vidRight = (ImageButton) findViewById(R.id.vid_right);
         //cameraPreview.setLayoutParams(layoutParams);
         //cameraPreview2.setLayoutParams(layoutParams);
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
@@ -145,32 +153,53 @@ public class CollageMainActivity extends Activity {
             @Override
             public void onClick(View view) {
                 new FFGraber(CollageMainActivity.this).execute();
-                }
+            }
 
         });
 
-        cameraPreview.setOnClickListener(new OnClickListener() {
+        vidLeft.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (firstSecond != 1) {
-                    cameraPreview2.removeView(mPreview);
-                    cameraPreview.addView(mPreview);
-                    firstSecond = 1;
-                }
+                view.setVisibility(View.GONE);
+                cameraPreview2.removeView(mPreview);
+                cameraPreview.addView(mPreview);
+                firstSecond = 1;
+                vidRight.setVisibility(View.VISIBLE);
             }
         });
 
-        cameraPreview2.setOnClickListener(new OnClickListener() {
+        vidRight.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (firstSecond == 1) {
-                    cameraPreview.removeView(mPreview);
-                    cameraPreview2.addView(mPreview);
-                    firstSecond = 2;
-                }
-
+                view.setVisibility(View.GONE);
+                cameraPreview.removeView(mPreview);
+                cameraPreview2.addView(mPreview);
+                firstSecond = 2;
+                vidLeft.setVisibility(View.VISIBLE);
             }
         });
+//        cameraPreview.setOnClickListener(new OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                if (firstSecond != 1) {
+//                    cameraPreview2.removeView(mPreview);
+//                    cameraPreview.addView(mPreview);
+//                    firstSecond = 1;
+//                }
+//            }
+//        });
+//
+//        cameraPreview2.setOnClickListener(new OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                if (firstSecond == 1) {
+//                    cameraPreview.removeView(mPreview);
+//                    cameraPreview2.addView(mPreview);
+//                    firstSecond = 2;
+//                }
+//
+//            }
+//        });
 
         for (int i = 0; i < 10; i++) {
             selectedImagesPathList.add("gag");
@@ -249,11 +278,9 @@ public class CollageMainActivity extends Activity {
 
         File file = new File(myDir, "myvideo" + firstSecond + ".mp4");
         mediaRecorder.setOutputFile(file.getAbsolutePath());
-        if(isCaptured==true) {
-            mediaRecorder.setMaxDuration((int)time*10000); // Set max duration 90 sec.
-        }else {
-            mediaRecorder.setMaxDuration(900000); // Set max duration 90 sec.
-        }
+
+            mediaRecorder.setMaxDuration(90000); // Set max duration 90 sec.
+
         mediaRecorder.setMaxFileSize(50000000); // Set max file size 50M
         count++;
 
@@ -343,8 +370,11 @@ public class CollageMainActivity extends Activity {
         @Override
         public void onClick(View v) {
             if (recording) {
-                //time=c.get(Calendar.SECOND)-time;
-                textView.setText(System.currentTimeMillis() / 1000 - time + "");
+                myThread.interrupt();
+                capturedTime = currentCapturedTime;
+                vidLeft.setClickable(true);
+                vidRight.setClickable(true);
+
                 // stop recording and release camera
                 mediaRecorder.stop(); // stop the recording
                 releaseMediaRecorder(); // release the MediaRecorder object
@@ -356,6 +386,16 @@ public class CollageMainActivity extends Activity {
                     Toast.makeText(CollageMainActivity.this, "Fail in prepareMediaRecorder()!\n - Ended -", Toast.LENGTH_LONG).show();
                     finish();
                 }
+
+                currentCapturedTime = 0;
+
+                vidLeft.setClickable(false);
+                vidRight.setClickable(false);
+
+                Runnable myRunnableThread = new CountDownRunner();
+                myThread= new Thread(myRunnableThread);
+                myThread.start();
+
                 // work on UiThread for better performance
                 runOnUiThread(new Runnable() {
                     public void run() {
@@ -363,8 +403,6 @@ public class CollageMainActivity extends Activity {
 
                         try {
                             mediaRecorder.start();
-                            time = System.currentTimeMillis() / 1000;
-                            textView.setText("" + System.currentTimeMillis() / 1000);
                             isCaptured=true;
 
 
@@ -411,6 +449,36 @@ public class CollageMainActivity extends Activity {
         canvas.drawBitmap(source, null, targetRect, null);
 
         return dest;
+    }
+
+
+    public void doWork() {
+        runOnUiThread(new Runnable() {
+            public void run() {
+                try{
+
+                    textView.setText("Time  " + capturedTime/10.0 +"/"+ currentCapturedTime/10.0);
+                    currentCapturedTime++;
+                    if (currentCapturedTime == capturedTime)
+                        captrureListener.onClick(capture);
+                }catch (Exception e) {}
+            }
+        });
+    }
+
+    class CountDownRunner implements Runnable{
+        // @Override
+        public void run() {
+            while(!Thread.currentThread().isInterrupted()){
+                try {
+                    doWork();
+                    Thread.sleep(100); // Pause of 1 Second
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }catch(Exception e){
+                }
+            }
+        }
     }
 
 }
