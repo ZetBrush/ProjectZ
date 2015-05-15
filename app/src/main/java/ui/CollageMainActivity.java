@@ -271,7 +271,7 @@ public class CollageMainActivity extends Activity {
         mediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
         mediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
 
-        mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_480P));
+        mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_QVGA));
 
 
         mediaRecorder.setOrientationHint(90);
