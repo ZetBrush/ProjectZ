@@ -35,6 +35,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import vid.Effects2;
 import vid.FFGraber;
 
 public class CollageMainActivity extends Activity {
@@ -65,6 +66,15 @@ public class CollageMainActivity extends Activity {
     private ArrayList<String> selectedImagesPathList = new ArrayList();
     private static final String root = Environment.getExternalStorageDirectory().toString();
     private File myDir = new File(root + "/picsartVideo");
+    static int timer =0;
+
+    public static int getTimer() {
+        return timer;
+    }
+
+    public void setTimer(int timer) {
+        this.timer = timer;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -372,9 +382,10 @@ public class CollageMainActivity extends Activity {
             if (recording) {
                 myThread.interrupt();
                 capturedTime = currentCapturedTime;
+
                 vidLeft.setClickable(true);
                 vidRight.setClickable(true);
-
+                Effects2.initConfig(currentCapturedTime);
                 // stop recording and release camera
                 mediaRecorder.stop(); // stop the recording
                 releaseMediaRecorder(); // release the MediaRecorder object
@@ -456,11 +467,14 @@ public class CollageMainActivity extends Activity {
         runOnUiThread(new Runnable() {
             public void run() {
                 try{
-
                     textView.setText("Time  " + capturedTime/10.0 +"/"+ currentCapturedTime/10.0);
+
                     currentCapturedTime++;
-                    if (currentCapturedTime == capturedTime)
+                    if (currentCapturedTime == capturedTime) {
                         captrureListener.onClick(capture);
+                        Effects2.initConfig(capturedTime/10.0);
+                    }
+
                 }catch (Exception e) {}
             }
         });
