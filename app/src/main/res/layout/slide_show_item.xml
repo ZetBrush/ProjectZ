@@ -4,8 +4,8 @@
 
     <ImageView
         android:id="@+id/slide_show_image"
-        android:layout_width="90dp"
-        android:layout_height="90dp"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
         android:background="@android:color/darker_gray"/>
 
 </FrameLayout>

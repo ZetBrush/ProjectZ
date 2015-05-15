@@ -4,27 +4,34 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.RectF;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.media.CamcorderProfile;
+import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.util.DisplayMetrics;
 import android.view.Display;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.MediaController;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg;
 import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler;
@@ -54,8 +61,10 @@ public class CollageMainActivity extends Activity {
     int count = 0;
     int currentCapturedTime;
     int capturedTime;
-    boolean isCaptured=false;
+    boolean isCaptured = false;
+    boolean isplaying=false;
     private RecyclerView recyclerView;
+    MediaPlayer mediaPlayer;
 
     private SlideShowAdapter slideShowAdapter;
     private StaggeredGridLayoutManager staggeredGridLayoutManager;
@@ -76,6 +85,9 @@ public class CollageMainActivity extends Activity {
         this.timer = timer;
     }
 
+    MediaController media_Controller;
+
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,8 +98,25 @@ public class CollageMainActivity extends Activity {
 
         myDir.mkdirs();
         initialize();
-        loadFFMpegBinary();
+        //loadFFMpegBinary();
+
+        //getInit();
     }
+
+   /* public void getInit() {
+        video_player_view = (VideoView) findViewById(R.id.video_player_view);
+        media_Controller = new MediaController(this);
+        dm = new DisplayMetrics();
+        this.getWindowManager().getDefaultDisplay().getMetrics(dm);
+        int height = dm.heightPixels;
+        int width = dm.widthPixels;
+        video_player_view.setMinimumWidth(width);
+        video_player_view.setMinimumHeight(height);
+        video_player_view.setMediaController(media_Controller);
+        media_Controller.setVisibility(View.GONE);
+        video_player_view.setVideoPath(myDir + "/myvideo1.mp4");
+    }*/
+
 
     private void loadFFMpegBinary() {
         try {
@@ -178,11 +207,21 @@ public class CollageMainActivity extends Activity {
             }
         });
 
+        final VideoView video=new VideoView(getApplicationContext());
+        media_Controller = new MediaController(this);
+        video.setMinimumWidth(50);
+        video.setMinimumHeight(50);
+        video.setMediaController(media_Controller);
+        media_Controller.setVisibility(View.GONE);
+        video.setVideoPath(myDir + "/myvideo1.mp4");
+
         vidRight.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
                 view.setVisibility(View.GONE);
                 cameraPreview.removeView(mPreview);
+                //cameraPreview.addView(video);
+                //video.start();
                 cameraPreview2.addView(mPreview);
                 firstSecond = 2;
                 vidLeft.setVisibility(View.VISIBLE);
@@ -211,11 +250,17 @@ public class CollageMainActivity extends Activity {
 //            }
 //        });
 
-        for (int i = 0; i < 10; i++) {
+        ArrayList<Bitmap> bitmaps=new ArrayList<>();
+        bitmaps.add(BitmapFactory.decodeResource(getResources(), R.drawable.frame2));
+        bitmaps.add(BitmapFactory.decodeResource(getResources(), R.drawable.frame3));
+        bitmaps.add(BitmapFactory.decodeResource(getResources(), R.drawable.frame6));
+        bitmaps.add(BitmapFactory.decodeResource(getResources(), R.drawable.frame7));
+        for (int i = 0; i < 4; i++) {
+
             selectedImagesPathList.add("gag");
         }
 
-        slideShowAdapter = new SlideShowAdapter(selectedImagesPathList, this);
+        slideShowAdapter = new SlideShowAdapter(selectedImagesPathList, this, bitmaps);
         staggeredGridLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.HORIZONTAL);
         itemAnimator = new DefaultItemAnimator();
 
@@ -283,13 +328,12 @@ public class CollageMainActivity extends Activity {
 
         mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_QVGA));
 
-
         mediaRecorder.setOrientationHint(90);
 
         File file = new File(myDir, "myvideo" + firstSecond + ".mp4");
         mediaRecorder.setOutputFile(file.getAbsolutePath());
 
-            mediaRecorder.setMaxDuration(90000); // Set max duration 90 sec.
+        mediaRecorder.setMaxDuration(90000); // Set max duration 90 sec.
 
         mediaRecorder.setMaxFileSize(50000000); // Set max file size 50M
         count++;
@@ -404,7 +448,7 @@ public class CollageMainActivity extends Activity {
                 vidRight.setClickable(false);
 
                 Runnable myRunnableThread = new CountDownRunner();
-                myThread= new Thread(myRunnableThread);
+                myThread = new Thread(myRunnableThread);
                 myThread.start();
 
                 // work on UiThread for better performance
@@ -414,7 +458,7 @@ public class CollageMainActivity extends Activity {
 
                         try {
                             mediaRecorder.start();
-                            isCaptured=true;
+                            isCaptured = true;
 
 
                         } catch (final Exception ex) {
@@ -480,16 +524,17 @@ public class CollageMainActivity extends Activity {
         });
     }
 
-    class CountDownRunner implements Runnable{
+
+    class CountDownRunner implements Runnable {
         // @Override
         public void run() {
-            while(!Thread.currentThread().isInterrupted()){
+            while (!Thread.currentThread().isInterrupted()) {
                 try {
                     doWork();
                     Thread.sleep(100); // Pause of 1 Second
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                }catch(Exception e){
+                } catch (Exception e) {
                 }
             }
         }
