@@ -1,7 +1,7 @@
 package ui;
 
 import android.content.Context;
-import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Environment;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -21,18 +21,18 @@ public class SlideShowAdapter extends RecyclerView.Adapter<SlideShowAdapter.View
     private static final String root = Environment.getExternalStorageDirectory().toString();
     private File myDir = new File(root + "/req_images");
 
-    private ArrayList<String> arrayList;
-    private ArrayList<Bitmap> array;
+    private ArrayList<Integer> array;
     private Context context;
     private LayoutInflater infalter;
+    private CollageMainActivity.OnFrameChangeListener frameChangeListener;
 
-    public SlideShowAdapter(ArrayList<String> strings, Context c , ArrayList<Bitmap> bitmaps) {
+    public SlideShowAdapter(Context c , ArrayList<Integer> frames, CollageMainActivity.OnFrameChangeListener frameChangeListener) {
 
-        array=bitmaps;
-        arrayList = strings;
+        array=frames;
         infalter = (LayoutInflater) c
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         context = c;
+        this.frameChangeListener = frameChangeListener;
     }
 
     @Override
@@ -44,17 +44,17 @@ public class SlideShowAdapter extends RecyclerView.Adapter<SlideShowAdapter.View
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
 
-        holder.slideShowImage.setImageBitmap(array.get(position));
-        /*holder.slideShowImage.setOnClickListener(new View.OnClickListener() {
+        holder.slideShowImage.setImageBitmap(BitmapFactory.decodeResource(context.getResources(), array.get(position)));
+        holder.slideShowImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                viewPager.setCurrentItem(position, false);
+                frameChangeListener.onFrameChange(position);
             }
         });
 
 
 
-        try {
+        /*try {
             ImageLoader.getInstance().displayImage(path
                     , holder.slideShowImage, new SimpleImageLoadingListener() {
                 @Override
@@ -72,16 +72,16 @@ public class SlideShowAdapter extends RecyclerView.Adapter<SlideShowAdapter.View
             });
         } catch (Exception e) {
             e.printStackTrace();
-        }**/
+        }*/
     }
 
     @Override
     public int getItemCount() {
-        return arrayList.size();
+        return array.size();
     }
 
-    public String getItem(int i) {
-        return arrayList.get(i);
+    public Integer getItem(int i) {
+        return array.get(i);
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
@@ -97,7 +97,7 @@ public class SlideShowAdapter extends RecyclerView.Adapter<SlideShowAdapter.View
         }
 
         public void removeAt(int position) {
-            arrayList.remove(position);
+            array.remove(position);
             //notifyItemRemoved(position);
             notifyDataSetChanged();
             //notifyItemRangeChanged(getPosition(), arrayList.size());

@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.RectF;
 import android.hardware.Camera;
@@ -17,9 +16,9 @@ import android.os.Environment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
-import android.util.DisplayMetrics;
 import android.view.Display;
-import android.view.SurfaceView;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -27,6 +26,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.MediaController;
 import android.widget.TextView;
@@ -46,6 +46,8 @@ import vid.Effects2;
 import vid.FFGraber;
 
 public class CollageMainActivity extends Activity {
+
+    public static int currentFrameId;
     private Camera mCamera;
     private CameraPreview mPreview;
     private MediaRecorder mediaRecorder;
@@ -65,6 +67,9 @@ public class CollageMainActivity extends Activity {
     boolean isplaying=false;
     private RecyclerView recyclerView;
     MediaPlayer mediaPlayer;
+    ImageView frameImage;
+    FrameLayout cameraPreviewFrame1;
+    FrameLayout cameraPreviewFrame2;
 
     private SlideShowAdapter slideShowAdapter;
     private StaggeredGridLayoutManager staggeredGridLayoutManager;
@@ -72,7 +77,12 @@ public class CollageMainActivity extends Activity {
 
     private LinearLayout cameraPreview2;
 
-    private ArrayList<String> selectedImagesPathList = new ArrayList();
+    FrameLayout collageFrame;
+
+    private LayoutInflater  mInflater;
+
+    OnFrameChangeListener frameChangeListener;
+
     private static final String root = Environment.getExternalStorageDirectory().toString();
     private File myDir = new File(root + "/picsartVideo");
     static int timer =0;
@@ -97,7 +107,20 @@ public class CollageMainActivity extends Activity {
 
 
         myDir.mkdirs();
+        collageFrame = (FrameLayout) findViewById(R.id.collage_frame);
+//        collageFrame.setOnInflateListener(new ViewStub.OnInflateListener() {
+//            @Override
+//            public void onInflate(ViewStub viewStub, View view) {
+//
+//            }
+//        });
+        //collageFrame.setLayoutResource(R.layout.f_1);
+        mInflater = (LayoutInflater)this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        mInflater.inflate(R.layout.f_1, collageFrame, true);
+
+
         initialize();
+
         //loadFFMpegBinary();
 
         //getInit();
@@ -169,6 +192,10 @@ public class CollageMainActivity extends Activity {
 
         FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(width / 2, (int) (1.3 * width / 2));
 
+        currentFrameId = R.drawable.picsintframe1;
+        cameraPreviewFrame1 = (FrameLayout) findViewById(R.id.preview_frame1);
+        cameraPreviewFrame2 = (FrameLayout) findViewById(R.id.preview_frame2);
+        frameImage = (ImageView) findViewById(R.id.frame_image);
         renderBtn = (Button) findViewById(R.id.rendersavebtn);
         cameraPreview = (LinearLayout) findViewById(R.id.camera_preview);
         cameraPreview2 = (LinearLayout) findViewById(R.id.camera_preview2);
@@ -250,17 +277,113 @@ public class CollageMainActivity extends Activity {
 //            }
 //        });
 
-        ArrayList<Bitmap> bitmaps=new ArrayList<>();
-        bitmaps.add(BitmapFactory.decodeResource(getResources(), R.drawable.frame2));
-        bitmaps.add(BitmapFactory.decodeResource(getResources(), R.drawable.frame3));
-        bitmaps.add(BitmapFactory.decodeResource(getResources(), R.drawable.frame6));
-        bitmaps.add(BitmapFactory.decodeResource(getResources(), R.drawable.frame7));
-        for (int i = 0; i < 4; i++) {
+//        ArrayList<Bitmap> bitmaps=new ArrayList<>();
+//        bitmaps.add(BitmapFactory.decodeResource(getResources(), R.drawable.picsintframe1));
+//        bitmaps.add(BitmapFactory.decodeResource(getResources(), R.drawable.frame3));
+//        bitmaps.add(BitmapFactory.decodeResource(getResources(), R.drawable.frame6));
+//        bitmaps.add(BitmapFactory.decodeResource(getResources(), R.drawable.frame7));
 
-            selectedImagesPathList.add("gag");
-        }
+        final ArrayList<Integer> frames=new ArrayList<>();
+        frames.add( R.drawable.picsintframe1);
+        frames.add(R.drawable.frame3);
+        frames.add(R.drawable.frame6);
+        frames.add(R.drawable.frame7);
 
-        slideShowAdapter = new SlideShowAdapter(selectedImagesPathList, this, bitmaps);
+        final ArrayList<Integer> layoutFrames=new ArrayList<>();
+        layoutFrames.add( R.layout.f_1);
+        layoutFrames.add(R.layout.f_2);
+        layoutFrames.add(R.drawable.frame6);
+        layoutFrames.add(R.drawable.frame7);
+
+        frameChangeListener = new OnFrameChangeListener() {
+            FrameLayout.LayoutParams layoutParams;
+            @Override
+            public void onFrameChange(int position) {
+                switch (position){
+                    case 0:
+                        layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM );
+                        cameraPreviewFrame1.setLayoutParams(layoutParams);
+                        layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.RIGHT );
+                        cameraPreviewFrame2.setLayoutParams(layoutParams);
+                        frameImage.setBackgroundResource(R.drawable.picsintframe1);
+                        currentFrameId = frames.get(0);
+                        break;
+                    case 1:
+
+                        layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM );
+                        cameraPreviewFrame1.setLayoutParams(layoutParams);
+                        layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.RIGHT | Gravity.BOTTOM);
+                        cameraPreviewFrame2.setLayoutParams(layoutParams);
+//                        ((FrameLayout.LayoutParams)cameraPreviewFrame1.getLayoutParams()).gravity= Gravity.BOTTOM|Gravity.LEFT;
+//                        //((FrameLayout.LayoutParams)cameraPreviewFrame2.getLayoutParams()).gravity= Gravity.RIGHT|Gravity.BOTTOM;
+//                       // cameraPreview2.setGravity(Gravity.RIGHT | Gravity.BOTTOM);
+//                        cameraPreviewFrame2.setLayoutParams(layoutParams);
+                        frameImage.setBackgroundResource(R.drawable.frame3);
+                        currentFrameId = frames.get(1);
+                        break;
+                    case 2:
+                        layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                        layoutParams.setMargins(10,10,0,0);
+                        cameraPreviewFrame1.setLayoutParams(layoutParams);
+                        layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.RIGHT | Gravity.BOTTOM );
+                        layoutParams.setMargins(0,0,0,15);
+                        cameraPreviewFrame2.setLayoutParams(layoutParams);
+                        frameImage.setBackgroundResource(R.drawable.frame6);
+                        currentFrameId = frames.get(2);
+                        break;
+                }
+                //cameraPreview.removeAllViews();
+               //FrameLayout view = (FrameLayout) mInflater.inflate(layoutFrames.get(position), collageFrame, true);
+
+                //collageFrame.setLayoutResource(layoutFrames.get(position));
+//                LayoutInflater li = LayoutInflater.from(CollageMainActivity.this);
+//                FrameLayout view = (FrameLayout) li.inflate(layoutFrames.get(position), collageFrame, false);
+//                view.setOnInflateListener(new ViewStub.OnInflateListener() {
+//                    @Override
+//                    public void onInflate(ViewStub viewStub, View view) {
+//
+//                    }
+//                });
+
+
+//                cameraPreview = (LinearLayout) collageFrame.findViewById(R.id.camera_preview);
+//                cameraPreview2 = (LinearLayout) collageFrame.findViewById(R.id.camera_preview2);
+//
+//                vidLeft = (ImageButton) collageFrame.findViewById(R.id.vid_left);
+//                vidRight = (ImageButton) collageFrame.findViewById(R.id.vid_right);
+//
+//
+//                cameraPreview.addView(mPreview);
+//
+//                vidLeft.setOnClickListener(new OnClickListener() {
+//                    @Override
+//                    public void onClick(View view) {
+//                        view.setVisibility(View.GONE);
+//                        cameraPreview2.removeView(mPreview);
+//                        cameraPreview.addView(mPreview);
+//                        firstSecond = 1;
+//                        vidRight.setVisibility(View.VISIBLE);
+//                    }
+//                });
+//
+//                vidRight.setOnClickListener(new OnClickListener() {
+//                    @Override
+//                    public void onClick(View view) {
+//                        view.setVisibility(View.GONE);
+//                        cameraPreview.removeView(mPreview);
+//                        //cameraPreview.addView(video);
+//                        //video.start();
+//                        cameraPreview2.addView(mPreview);
+//                        firstSecond = 2;
+//                        vidLeft.setVisibility(View.VISIBLE);
+//                    }
+//                });
+
+                //collageFrame.addView(view);
+            }
+        };
+
+        slideShowAdapter = new SlideShowAdapter(this, frames, frameChangeListener);
         staggeredGridLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.HORIZONTAL);
         itemAnimator = new DefaultItemAnimator();
 
@@ -327,6 +450,8 @@ public class CollageMainActivity extends Activity {
         mediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
 
         mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_QVGA));
+
+        //mediaRecorder.setVideoFrameRate(25000);
 
         mediaRecorder.setOrientationHint(90);
 
@@ -538,6 +663,10 @@ public class CollageMainActivity extends Activity {
                 }
             }
         }
+    }
+
+    public static interface OnFrameChangeListener{
+        public void onFrameChange(int position);
     }
 
 }
