@@ -107,7 +107,7 @@ public class CollageMainActivity extends Activity {
 
 
         myDir.mkdirs();
-        collageFrame = (FrameLayout) findViewById(R.id.collage_frame);
+        //collageFrame = (FrameLayout) findViewById(R.id.collage_frame);
 //        collageFrame.setOnInflateListener(new ViewStub.OnInflateListener() {
 //            @Override
 //            public void onInflate(ViewStub viewStub, View view) {
@@ -115,8 +115,8 @@ public class CollageMainActivity extends Activity {
 //            }
 //        });
         //collageFrame.setLayoutResource(R.layout.f_1);
-        mInflater = (LayoutInflater)this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        mInflater.inflate(R.layout.f_1, collageFrame, true);
+//        mInflater = (LayoutInflater)this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+//        mInflater.inflate(R.layout.f_1, collageFrame, true);
 
 
         initialize();
