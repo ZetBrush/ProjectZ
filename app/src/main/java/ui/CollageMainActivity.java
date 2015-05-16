@@ -2,6 +2,7 @@ package ui;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -13,9 +14,11 @@ import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -29,23 +32,30 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.MediaController;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import com.generatingmain.AbsolutePathActivity;
+import com.generatingmain.VideoRenderService;
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg;
 import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler;
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException;
 import com.javacodegeeks.androidvideocaptureexample.R;
 
+import net.pocketmagic.android.openmxplayer.OpenMXPlayer;
+import net.pocketmagic.android.openmxplayer.PlayerEvents;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
+import vid.DownloadResultReceiver;
 import vid.Effects2;
-import vid.FFGraber;
 
-public class CollageMainActivity extends Activity {
+public class CollageMainActivity extends Activity implements DownloadResultReceiver.Receiver {
 
     public static int currentFrameId;
     private Camera mCamera;
@@ -64,7 +74,7 @@ public class CollageMainActivity extends Activity {
     int currentCapturedTime;
     int capturedTime;
     boolean isCaptured = false;
-    boolean isplaying=false;
+
     private RecyclerView recyclerView;
     MediaPlayer mediaPlayer;
     ImageView frameImage;
@@ -86,6 +96,19 @@ public class CollageMainActivity extends Activity {
     private static final String root = Environment.getExternalStorageDirectory().toString();
     private File myDir = new File(root + "/picsartVideo");
     static int timer =0;
+    TextView progress;
+    Button playButton;
+    SeekBar seekbar;
+    boolean isplaying = false;
+    private TextView musicTimeText;
+    private TextView musicNameText;
+    private Button pickMusicbtn;
+    private long musictotalTime = 0;
+    private static String musicPath = null;
+    OpenMXPlayer player = null;
+    ImageView imagepreview;
+    String newMusicPath;
+    public static int secondsfromstarting = 0;
 
     public static int getTimer() {
         return timer;
@@ -105,6 +128,11 @@ public class CollageMainActivity extends Activity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         myContext = this;
 
+         playButton = (Button) findViewById(R.id.playButtn);
+         seekbar = (SeekBar) findViewById(R.id.seekbar);
+        pickMusicbtn = (Button) findViewById(R.id.pickMusicbtn);
+        musicNameText = (TextView) findViewById(R.id.musicNameText);
+        musicTimeText = (TextView) findViewById(R.id.musicTimeText);
 
         myDir.mkdirs();
         //collageFrame = (FrameLayout) findViewById(R.id.collage_frame);
@@ -120,26 +148,11 @@ public class CollageMainActivity extends Activity {
 
 
         initialize();
-
-        //loadFFMpegBinary();
-
-        //getInit();
+        loadFFMpegBinary();
     }
-
-   /* public void getInit() {
-        video_player_view = (VideoView) findViewById(R.id.video_player_view);
-        media_Controller = new MediaController(this);
-        dm = new DisplayMetrics();
-        this.getWindowManager().getDefaultDisplay().getMetrics(dm);
-        int height = dm.heightPixels;
-        int width = dm.widthPixels;
-        video_player_view.setMinimumWidth(width);
-        video_player_view.setMinimumHeight(height);
-        video_player_view.setMediaController(media_Controller);
-        media_Controller.setVisibility(View.GONE);
-        video_player_view.setVideoPath(myDir + "/myvideo1.mp4");
-    }*/
-
+    public static String getMusicPath(){
+        return musicPath;
+    }
 
     private void loadFFMpegBinary() {
         try {
@@ -172,7 +185,30 @@ public class CollageMainActivity extends Activity {
             mCamera = Camera.open(findBackFacingCamera());
             mPreview.refreshCamera(mCamera);
         }
+
+        seekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser && player != null) try {
+                    player.seek(progress);
+                } catch (NullPointerException e) {
+                }
+
+            }
+        });
     }
+
+
+
 
     @Override
     protected void onPause() {
@@ -218,7 +254,17 @@ public class CollageMainActivity extends Activity {
         renderBtn.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                new FFGraber(CollageMainActivity.this).execute();
+
+                // Starting Sevice here
+
+                VideoRenderService vrs = new VideoRenderService();
+                DownloadResultReceiver mReciever = new DownloadResultReceiver(new Handler());
+                mReciever.setReceiver(CollageMainActivity.this);
+                Intent intent = new Intent(Intent.ACTION_SYNC, null, CollageMainActivity.this, VideoRenderService.class);
+                intent.putExtra("receiver", mReciever);
+                startService(intent);
+
+                //new FFGraber(CollageMainActivity.this).execute();
             }
 
         });
@@ -307,6 +353,7 @@ public class CollageMainActivity extends Activity {
                         cameraPreviewFrame2.setLayoutParams(layoutParams);
                         frameImage.setBackgroundResource(R.drawable.picsintframe1);
                         currentFrameId = frames.get(0);
+                        Effects2.currentframe=currentFrameId;
                         break;
                     case 1:
 
@@ -320,6 +367,7 @@ public class CollageMainActivity extends Activity {
 //                        cameraPreviewFrame2.setLayoutParams(layoutParams);
                         frameImage.setBackgroundResource(R.drawable.frame3);
                         currentFrameId = frames.get(1);
+                        Effects2.currentframe=currentFrameId;
                         break;
                     case 2:
                         layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -330,6 +378,7 @@ public class CollageMainActivity extends Activity {
                         cameraPreviewFrame2.setLayoutParams(layoutParams);
                         frameImage.setBackgroundResource(R.drawable.frame6);
                         currentFrameId = frames.get(2);
+                        Effects2.currentframe=currentFrameId;
                         break;
                 }
                 //cameraPreview.removeAllViews();
@@ -664,6 +713,197 @@ public class CollageMainActivity extends Activity {
             }
         }
     }
+
+    //Recieve Result
+
+    @Override
+    public void onReceiveResult(int resultCode, Bundle resultData) {
+        switch (resultCode) {
+            case 1:
+                setProgressBarIndeterminateVisibility(true);
+                Toast.makeText(CollageMainActivity.this,""+resultCode,Toast.LENGTH_SHORT);
+                break;
+            case 2:
+                setProgressBarIndeterminateVisibility(true);
+                Toast.makeText(CollageMainActivity.this,""+resultCode,Toast.LENGTH_SHORT);
+                break;
+            case 3:
+                setProgressBarIndeterminateVisibility(true);
+                Toast.makeText(CollageMainActivity.this,""+resultCode,Toast.LENGTH_SHORT);
+                break;
+            case 4:
+                setProgressBarIndeterminateVisibility(true);
+                Toast.makeText(CollageMainActivity.this,""+resultCode,Toast.LENGTH_SHORT);
+                break;
+            case 5:
+                setProgressBarIndeterminateVisibility(true);
+                Toast.makeText(CollageMainActivity.this,""+resultCode,Toast.LENGTH_SHORT);
+                break;
+
+
+        }
+    }
+
+    public void onPickMusicClick(View v) {
+        Intent intent = new Intent();
+        intent.setType("*/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(intent.createChooser(intent, "Complate action using"), 5);
+    }
+
+
+    PlayerEvents events = new PlayerEvents() {
+        @Override
+        public void onStop() {
+            seekbar.setProgress(0);
+            playButton.setText("|>");
+            isplaying = false;
+        }
+
+        @Override
+        public void onStart(String mime, int sampleRate, int channels, long duration) {
+            Log.d("on startplay", "onStart called: " + mime + " sampleRate:" + sampleRate + " channels:" + channels);
+            if (duration == 0) {
+
+            } else {
+
+            }
+            // .setText("Playing content:" + mime + " " + sampleRate + "Hz " + (duration/1000000) + "sec");
+        }
+
+        @Override
+        public void onPlayUpdate(int percent, long currentms, long totalms) {
+            seekbar.setProgress(percent);
+            musicTimeText.setText(String.format("%02d:%02d",
+                    TimeUnit.MILLISECONDS.toMinutes(currentms),
+                    TimeUnit.MILLISECONDS.toSeconds(currentms) -
+                            TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(currentms))
+            ));
+            secondsfromstarting = (int)currentms/1000;
+            musictotalTime = totalms;
+            if (musicPath == null) {
+                player.stop();
+                player.setDataSource("");
+
+            }
+
+        }
+
+        @Override
+        public void onPlay() {
+
+            playButton.setText("||");
+
+        }
+
+        @Override
+        public void onError() {
+            seekbar.setProgress(0);
+            Toast.makeText(CollageMainActivity.this, "Not supported content..", Toast.LENGTH_SHORT).show();
+            player = new OpenMXPlayer(events);
+        }
+    };
+
+    public void onPlayClick(View v) {
+
+        if (player == null) {
+            player = new OpenMXPlayer(events);
+
+        }
+
+        if (isplaying) {
+            player.pause();
+            playButton.setText("|>");
+
+            isplaying = false;
+        } else {
+            if (musicPath != null) {
+                player.setDataSource(musicPath);   //"/storage/removable/sdcard1/DCIM/100ANDRO/newfold/strangeclouds.aac");
+                player.play();
+                playButton.setText("||");
+                isplaying = true;
+            } else {
+                Toast.makeText(this, "No music is selected", Toast.LENGTH_SHORT).show();
+
+            }
+        }
+
+
+    }
+    public void onDeleteMusicPathClick(View v) {
+        musicPath = null;
+        player.stop();
+        musictotalTime = 0;
+        musicNameText.setText("No music Selected");
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 5 && data != null) {
+
+            musicPath = AbsolutePathActivity.getPath(CollageMainActivity.this, data.getData());
+            newMusicPath = musicPath;
+            if (musicPath != null)
+                musicNameText.setText(musicPath);
+            if (!musicPath.equals(newMusicPath)) {
+                try {
+                    player.stop();
+                    player.setDataSource("");
+                } catch (NullPointerException e) {
+                }
+            }
+
+            PlayerEvents events1 = new PlayerEvents() {
+                @Override
+                public void onStart(String mime, int sampleRate, int channels, long duration) {
+                    musictotalTime = duration / 1000;
+                }
+
+                @Override
+                public void onPlay() {
+
+                }
+
+                @Override
+                public void onPlayUpdate(int percent, long currentms, long totalms) {
+
+                }
+
+                @Override
+                public void onStop() {
+
+                }
+
+                @Override
+                public void onError() {
+
+                }
+            };
+
+            OpenMXPlayer mplyr = new OpenMXPlayer(events1);
+            mplyr.setDataSource(musicPath);
+            try {
+                mplyr.play();
+                mplyr.seek(2);
+                try {
+                    Thread.currentThread().wait(20);
+                } catch (InterruptedException e) {
+
+                }
+                mplyr.stop();
+
+            } catch (Exception e) {
+
+            }
+            mplyr.stop();
+            mplyr = null;
+
+        }
+    }
+
 
     public static interface OnFrameChangeListener{
         public void onFrameChange(int position);

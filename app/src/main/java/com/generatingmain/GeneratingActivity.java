@@ -1,3 +1,4 @@
+/*
 package com.generatingmain;
 
 import android.app.AlertDialog;
@@ -231,7 +232,8 @@ public class GeneratingActivity extends ActionBarActivity implements IThreadComp
     /////PickMusic///////
     public void onPickMusicClick(View v) {
         Intent intent = new Intent();
-        intent.setType("*/*");
+        intent.setType("**/
+/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(intent.createChooser(intent, "Complate action using"), 5);
     }
@@ -518,7 +520,8 @@ public class GeneratingActivity extends ActionBarActivity implements IThreadComp
                     @Override
                     public void onSuccess(String message) {
                         Log.d("FFMusic Success", message);
-                      /*  if(fade[0]){
+                      */
+/*  if(fade[0]){
                             fade[0]=false;
                             String fadecmd ="-i " + Environment.getExternalStorageDirectory().getPath() + "/req_images/musictoadd.aac" + " -af afade=t=out:st=" +
                                     (finalMusicdur-2) +":d=2 -strict -2 "+
@@ -528,7 +531,8 @@ public class GeneratingActivity extends ActionBarActivity implements IThreadComp
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
-                        }*/
+                        }*//*
+
                     }
 
                     @Override
@@ -656,11 +660,13 @@ public class GeneratingActivity extends ActionBarActivity implements IThreadComp
                 }
 
 
-               /* File fadfile = new File(filename + "000.png");
+               */
+/* File fadfile = new File(filename + "000.png");
                 if (fadfile.exists()) {
                     new StillVidEncoder().execute(fadfile);
 
-                }*/
+                }*//*
+
 
             }
 
@@ -714,7 +720,8 @@ public class GeneratingActivity extends ActionBarActivity implements IThreadComp
 
     @Override
     public void onBackPressed() {
-       /* try {
+       */
+/* try {
 
             File dir = new File(Environment.getExternalStorageDirectory() + "/req_images");
             if (dir.isDirectory()) {
@@ -726,7 +733,8 @@ public class GeneratingActivity extends ActionBarActivity implements IThreadComp
 
         } catch (Exception e) {
         }
-        finish();*/
+        finish();*//*
+
     }
 
     public String getRealPathFromURI(Context context, Uri contentUri) {
@@ -786,10 +794,12 @@ public class GeneratingActivity extends ActionBarActivity implements IThreadComp
 
                     Bitmap btm = BitmapFactory.decodeFile(img.getAbsolutePath());
 
-                   /* int width = btm.getWidth();
+                   */
+/* int width = btm.getWidth();
                     int height = btm.getHeight();
                     Bitmap transBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                    FileOutputStream out = null;*/
+                    FileOutputStream out = null;*//*
+
 
 
                     Effects.builder(ef)
@@ -1023,3 +1033,4 @@ public class GeneratingActivity extends ActionBarActivity implements IThreadComp
 
 
 }
+*/

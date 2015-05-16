@@ -1,6 +1,5 @@
 package vid;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -20,6 +19,7 @@ import java.io.IOException;
  */
 public class Effects2 {
     public enum EFFECT{FADE,SlIDE,ROTATE}
+    public static int currentframe=0;
 
     private static Effects2 efectInstance;
     private  EFFECT effect;
@@ -59,23 +59,38 @@ public class Effects2 {
 
 
 
-   public void generateFrames(Context ctx) {
+   public boolean generateFrames(Context ctx) {
 
        File outptfls = new File(Environment.getExternalStorageDirectory().getPath() + "/picsartVideo/readyframes/");
 
         if(!outptfls.exists()){
             outptfls.mkdirs();
         }
+       Bitmap transBitmapimmut=null;
 
-       Bitmap transBitmapimmut = BitmapFactory.decodeResource(ctx.getResources(), R.drawable.picsintframe1);
+       switch (currentframe){
+
+           case R.drawable.picsintframe1:
+               transBitmapimmut = BitmapFactory.decodeResource(ctx.getResources(), currentframe);
+               break;
+
+           case R.drawable.frame3:
+               transBitmapimmut = BitmapFactory.decodeResource(ctx.getResources(), currentframe);
+               break;
+           case R.drawable.frame6:
+               transBitmapimmut = BitmapFactory.decodeResource(ctx.getResources(), currentframe);
+               break;
+
+       }
+
+
        Bitmap transBitmap = transBitmapimmut.copy(Bitmap.Config.ARGB_8888,true);
        transBitmap = Bitmap.createScaledBitmap(transBitmap, 720, 720, true);
        Log.d("Width Height", String.valueOf(transBitmap.getWidth()) + " x " +transBitmap.getHeight());
        FileOutputStream out;
-       ProgressDialog d = ProgressDialog.show(ctx,"Working..","Processing frames") ;
-       d.show();
+
        for (int i = 1; i <= counter; i++) {
-           d.setProgress(i);
+
 
            Canvas canvas = new Canvas(transBitmap);
            try {
@@ -89,7 +104,7 @@ public class Effects2 {
                try {
                    File filename = new File(outptfls.getPath() + "/frame_" + String.format("%05d", i) + ".jpg");
                    out = new FileOutputStream(filename);
-                   transBitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+                   transBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
 
                } catch (Exception e) {
                    e.printStackTrace();
@@ -108,9 +123,11 @@ public class Effects2 {
 
            Log.d("frame gen ", ((i / (double) counter) * 100) + " %");
        }
-       Log.d("frame gen ","successful frame generation");
-       new MergeVidsWorker2(ctx,"","").execute();
-       d.dismiss();
+       Log.d("frame gen ", "successful frame generation");
+
+       return true;
+
+
    }
 
 

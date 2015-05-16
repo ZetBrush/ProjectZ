@@ -11,14 +11,25 @@ import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegCommandAlreadyRunnin
 
 import java.io.File;
 
+import ui.CollageMainActivity;
+
 /**
  * Created by Arman on 5/14/15.
  */
-public class FFGraber extends AsyncTask<String, Integer, Integer> implements ICommandProvider {
+public class FFGraber extends AsyncTask<String, Integer, Integer> implements ICommandProvider,IThreadCompleteListener {
     static Context ctx;
     String[] input = new String[2];
     String[] output = new String[2];
+    IThreadCompleteListener lis;
+    String musPath = "";
 
+    public void setListener(IThreadCompleteListener listener){
+        this.lis=listener;
+    }
+
+    public void setMusicPath(String path){
+        this.musPath=path;
+    }
 
     public FFGraber(Context ctx){
         this.ctx=ctx;
@@ -47,7 +58,7 @@ public class FFGraber extends AsyncTask<String, Integer, Integer> implements ICo
             ffmpg.execute(getCommand(input[0],output[0]), new FFmpegExecuteResponseHandler() {
                 @Override
                 public void onSuccess(String message) {
-
+                    lis.notifyOfThreadComplete(1);
                     if(checker2pass[0]){
                         checker2pass[0] =false;
                         checker2frame[0] = true;
@@ -55,18 +66,36 @@ public class FFGraber extends AsyncTask<String, Integer, Integer> implements ICo
                             ffmpg.execute(getCommand(input[1], output[1]), new FFmpegExecuteResponseHandler() {
                                 @Override
                                 public void onSuccess(String message) {
+                                    lis.notifyOfThreadComplete(2);
                                     Log.d("Graber sucess current",message);
 
                                         if(checker2frame[0]) {
                                             Log.d("final frame processing", " ");
-                                            Effects2.builder(Effects2.EFFECT.FADE)
+                                          boolean secondlis =  Effects2.builder(Effects2.EFFECT.FADE)
                                                     .generateFrames(ctx);
+
+                                            if(secondlis)
+                                            {
+                                                lis.notifyOfThreadComplete(3);
+                                                MergeVidsWorker2 mergw = new MergeVidsWorker2(ctx);
+                                                mergw.setListener(new IThreadCompleteListener() {
+                                                    @Override
+                                                    public void notifyOfThreadComplete(int id) {
+                                                        lis.notifyOfThreadComplete(4);
+                                                    }
+                                                });
+                                                mergw.execute(CollageMainActivity.secondsfromstarting);
+
+
+                                            }
+
                                             checker2frame[0]=false;
                                         }
                                 }
 
                                 @Override
                                 public void onProgress(String message) {
+
 
                                 }
 
@@ -89,12 +118,7 @@ public class FFGraber extends AsyncTask<String, Integer, Integer> implements ICo
                             e.printStackTrace();
                         }
 
-                     } else {
-
-
-
-
-                    }
+                     }
 
 
                 }
@@ -134,5 +158,10 @@ public class FFGraber extends AsyncTask<String, Integer, Integer> implements ICo
     public String getCommand(String... param) {
 
         return "-i "+ param[0]+" -r 25 -an -f image2 "+param[1]+"frame_%05d.jpg";
+    }
+
+    @Override
+    public void notifyOfThreadComplete(int id) {
+
     }
 }

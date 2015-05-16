@@ -68,12 +68,96 @@
 
     </FrameLayout>
 
+
+
+
+
+
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center"
+    android:orientation="vertical">
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true" >
+
+    <TextView
+        android:id="@+id/musicNameText"
+        android:layout_width="match_parent"
+        android:layout_height="15dp"
+        android:layout_marginTop="40dp"
+        android:text="No music selected"
+        android:textSize="14sp"
+
+        />
+
+    <ImageView
+        android:id="@+id/deleteMusicImg"
+        android:layout_width="15dp"
+        android:layout_height="15dp"
+        android:layout_marginBottom="20dp"
+        android:layout_marginLeft="300dp"
+        android:layout_marginTop="40dp"
+        android:background="@drawable/delete"
+        android:clickable="true"
+        android:onClick="onDeleteMusicPathClick" />
+
+    <Button
+        android:id="@+id/pickMusicbtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onPickMusicClick"
+        android:text="Pick Music"
+
+        />
+
+        <SeekBar
+        android:id="@+id/seekbar"
+        android:layout_width="210dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="100dp" />
+
+    <TextView
+        android:id="@+id/musicTimeText"
+        android:layout_width="40dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="300dp"
+        android:textSize="12sp"
+
+        />
+
+        <Button
+            android:id="@+id/playButtn"
+            android:text="|>"
+            android:textColor="#FFF2F2"
+            android:textSize="30sp"
+            android:background="@drawable/playbuttonshape"
+            android:shadowColor="#A843A5"
+            android:shadowDx="1"
+            android:shadowDy="0"
+            android:shadowRadius="5"
+            android:layout_width="46dp"
+            android:layout_height="50dp"
+            android:onClick="onPlayClick"
+            android:layout_above="@+id/linearLayout"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="60dp"
+            android:layout_gravity="right|center_vertical"/>
+    </FrameLayout>
+
+
+   </LinearLayout>
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
-        android:layout_height="70dp"
+        android:layout_height="50dp"
         android:layout_below="@+id/current_image"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="2dp"
         android:overScrollMode="never" />
 
 
@@ -81,7 +165,7 @@
         android:id="@+id/buttonsLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
+        android:layout_marginTop="2dp"
         android:gravity="center_horizontal"
         android:orientation="horizontal">
 

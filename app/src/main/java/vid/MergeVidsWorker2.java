@@ -18,13 +18,18 @@ public class MergeVidsWorker2 extends AsyncTask<Integer, Integer, Integer> imple
     Context ctx;
     String inputDir = Environment.getExternalStorageDirectory().getAbsolutePath()+"/picsArtvideo/readyframes/";
     String outputDir = Environment.getExternalStorageDirectory().getAbsolutePath()+"/";
-    String outputVidName="";
-    String audioPath="";
+    String outputVidName=Environment.getDownloadCacheDirectory().getAbsolutePath()+"/PicsArtVideo_collage";
 
-    public MergeVidsWorker2(Context ctx, String outputnm, String audiopath){
+    IThreadCompleteListener lis;
+
+
+    public MergeVidsWorker2(Context ctx){
         this.ctx = ctx;
-        this.outputVidName=outputnm;
-        this.audioPath=audiopath;
+
+    }
+
+    public void setListener(IThreadCompleteListener listener){
+        this.lis=listener;
     }
 
 
@@ -37,9 +42,11 @@ public class MergeVidsWorker2 extends AsyncTask<Integer, Integer, Integer> imple
             mmpg.execute(getCommand(inputDir, outputDir), new FFmpegExecuteResponseHandler() {
                 @Override
                 public void onSuccess(String message) {
+                    lis.notifyOfThreadComplete(2);
+                    Log.d("Merging.....Success", message);
 
-                    Log.d("Merging.....Success",message);
                 }
+
 
                 @Override
                 public void onProgress(String message) {
@@ -50,6 +57,7 @@ public class MergeVidsWorker2 extends AsyncTask<Integer, Integer, Integer> imple
                 @Override
                 public void onFailure(String message)
                 {
+
                     Log.d("Merging....Failure",message);
                 }
 
@@ -60,21 +68,11 @@ public class MergeVidsWorker2 extends AsyncTask<Integer, Integer, Integer> imple
 
                 @Override
                 public void onFinish() {
-                    Log.d("Merging.....","Finished!");
-                  /* if(check[0] && (audioPath!=null || audioPath!="")) {
-                        check[0] =false;
-                       //String cmd = "-y -i video.mp4 -i inputfile.mp3 -ss 30 -t 70 -acodec copy -vcodec copy outputfile.mp4"     -ss "+params[1]+" -t "+params[2] +";
-                        String cmd = "-i " + outputVidName + ".mp4 -i "+audioPath+" -map 0:0 -af afade=t=out:st="+(params[2]-params[1]-2)+ ":d=2 -map 1:0 -shortest " + outputVidName + "_m.mp4";
-                        try {
+                    Log.d("Merging.....", "Finished!");
 
-                            mmpg.execute(cmd, this);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }*/
+                        Toast.makeText(ctx, "Video is ready!", Toast.LENGTH_SHORT).show();
+                    }
 
-
-                    Toast.makeText(ctx,"Video is ready!",Toast.LENGTH_SHORT).show();
-                }
             });
         } catch (FFmpegCommandAlreadyRunningException e) {
             e.printStackTrace();
