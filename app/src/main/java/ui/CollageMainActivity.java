@@ -1,7 +1,10 @@
 package ui;
 
+import android.app.ActionBar;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -54,6 +57,7 @@ import java.util.concurrent.TimeUnit;
 
 import vid.DownloadResultReceiver;
 import vid.Effects2;
+import vid.FFGraber;
 
 public class CollageMainActivity extends Activity implements DownloadResultReceiver.Receiver {
 
@@ -61,7 +65,7 @@ public class CollageMainActivity extends Activity implements DownloadResultRecei
     private Camera mCamera;
     private CameraPreview mPreview;
     private MediaRecorder mediaRecorder;
-    private Button capture, switchCamera, renderBtn;
+    private Button capture, switchCamera;
     ImageButton vidLeft;
     ImageButton vidRight;
     private Context myContext;
@@ -74,9 +78,9 @@ public class CollageMainActivity extends Activity implements DownloadResultRecei
     int currentCapturedTime;
     int capturedTime;
     boolean isCaptured = false;
-
     private RecyclerView recyclerView;
     MediaPlayer mediaPlayer;
+    int gag = 0;
     ImageView frameImage;
     FrameLayout cameraPreviewFrame1;
     FrameLayout cameraPreviewFrame2;
@@ -126,6 +130,8 @@ public class CollageMainActivity extends Activity implements DownloadResultRecei
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        clearDir(myDir);
         myContext = this;
 
          playButton = (Button) findViewById(R.id.playButtn);
@@ -153,6 +159,21 @@ public class CollageMainActivity extends Activity implements DownloadResultRecei
     public static String getMusicPath(){
         return musicPath;
     }
+
+   /* public void getInit() {
+        video_player_view = (VideoView) findViewById(R.id.video_player_view);
+        media_Controller = new MediaController(this);
+        dm = new DisplayMetrics();
+        this.getWindowManager().getDefaultDisplay().getMetrics(dm);
+        int height = dm.heightPixels;
+        int width = dm.widthPixels;
+        video_player_view.setMinimumWidth(width);
+        video_player_view.setMinimumHeight(height);
+        video_player_view.setMediaController(media_Controller);
+        media_Controller.setVisibility(View.GONE);
+        video_player_view.setVideoPath(myDir + "/myvideo1.mp4");
+    }*/
+
 
     private void loadFFMpegBinary() {
         try {
@@ -232,7 +253,7 @@ public class CollageMainActivity extends Activity implements DownloadResultRecei
         cameraPreviewFrame1 = (FrameLayout) findViewById(R.id.preview_frame1);
         cameraPreviewFrame2 = (FrameLayout) findViewById(R.id.preview_frame2);
         frameImage = (ImageView) findViewById(R.id.frame_image);
-        renderBtn = (Button) findViewById(R.id.rendersavebtn);
+        //renderBtn = (Button) findViewById(R.id.rendersavebtn);
         cameraPreview = (LinearLayout) findViewById(R.id.camera_preview);
         cameraPreview2 = (LinearLayout) findViewById(R.id.camera_preview2);
         textView = (TextView) findViewById(R.id.text_view);
@@ -251,7 +272,7 @@ public class CollageMainActivity extends Activity implements DownloadResultRecei
         switchCamera.setOnClickListener(switchCameraListener);
 
         cameraPreview.addView(mPreview);
-        renderBtn.setOnClickListener(new OnClickListener() {
+        /*renderBtn.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
 
@@ -267,7 +288,7 @@ public class CollageMainActivity extends Activity implements DownloadResultRecei
                 //new FFGraber(CollageMainActivity.this).execute();
             }
 
-        });
+        });*/
 
         vidLeft.setOnClickListener(new OnClickListener() {
             @Override
@@ -277,6 +298,7 @@ public class CollageMainActivity extends Activity implements DownloadResultRecei
                 cameraPreview.addView(mPreview);
                 firstSecond = 1;
                 vidRight.setVisibility(View.VISIBLE);
+
             }
         });
 
@@ -594,6 +616,7 @@ public class CollageMainActivity extends Activity implements DownloadResultRecei
 
 
     boolean recording = false;
+
     OnClickListener captrureListener = new OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -601,15 +624,90 @@ public class CollageMainActivity extends Activity implements DownloadResultRecei
                 myThread.interrupt();
                 capturedTime = currentCapturedTime;
 
-                vidLeft.setClickable(true);
-                vidRight.setClickable(true);
+               /* vidLeft.setClickable(false);
+                vidRight.setClickable(false);*/
                 Effects2.initConfig(currentCapturedTime);
+
                 // stop recording and release camera
                 mediaRecorder.stop(); // stop the recording
+                switchCamera.setClickable(true);
+
+                /*DisplayMetrics dm = new DisplayMetrics();
+                CollageMainActivity.this.getWindowManager().getDefaultDisplay().getMetrics(dm);
+                int height = dm.heightPixels;
+                int width = dm.widthPixels;*/
+                if(gag==1){
+
+                    AlertDialog.Builder adb = new AlertDialog.Builder(v.getRootView().getContext());
+                    adb.setTitle("Render/Save");
+                    adb.setMessage("Render/Save or Capture Again");
+                    adb.setIcon(android.R.drawable.ic_dialog_info);
+                    adb.setPositiveButton("Render/Save", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            new FFGraber(CollageMainActivity.this).execute();
+                        }
+                    });
+                    adb.setNegativeButton("Capture Again", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            cameraPreview.removeAllViews();
+                            cameraPreview2.removeAllViews();
+                            vidRight.setVisibility(View.VISIBLE);
+                            cameraPreview.addView(mPreview);
+                            clearDir(myDir);
+                            gag=0;
+                            firstSecond=1;
+                            capturedTime=0;
+                            recording = false;
+                        }
+                    });
+                    adb.setCancelable(false);
+                    adb.show();
+
+                }
+
+                if (gag < 2) {
+                    final VideoView video = new VideoView(CollageMainActivity.this);
+                    video.setLayoutParams(new LinearLayout.LayoutParams(500, 500));
+                    media_Controller = new MediaController(CollageMainActivity.this);
+                    ///video.setMinimumWidth(width);
+                    //video.setMinimumHeight(height);
+                    video.setMediaController(media_Controller);
+                    media_Controller.setVisibility(View.GONE);
+
+                    if (firstSecond == 1 && new File(myDir + "/myvideo1.mp4").exists()) {
+                        vidRight.setVisibility(View.GONE);
+                        video.setVideoPath(myDir + "/myvideo1.mp4");
+                        cameraPreview.removeView(mPreview);
+                        cameraPreview2.addView(mPreview);
+                        cameraPreview.addView(video);
+                        firstSecond = 2;
+                        video.start();
+
+                        //vidLeft.setVisibility(View.VISIBLE);
+                    }
+                    if (firstSecond == 2 && new File(myDir + "/myvideo2.mp4").exists()) {
+                        vidLeft.setVisibility(View.GONE);
+                        video.setVideoPath(myDir + "/myvideo2.mp4");
+                        cameraPreview2.removeView(mPreview);
+                        cameraPreview.addView(mPreview);
+                        cameraPreview2.addView(video);
+                        firstSecond = 1;
+                        video.start();
+
+                        //vidRight.setVisibility(View.VISIBLE);
+                    }
+                    gag++;
+                } else {
+
+                    Toast.makeText(CollageMainActivity.this, "jajajajaj", Toast.LENGTH_LONG).show();
+                }
                 releaseMediaRecorder(); // release the MediaRecorder object
                 Toast.makeText(CollageMainActivity.this, "Video captured!", Toast.LENGTH_LONG).show();
                 ((TextView) v).setText("Capture");
                 recording = false;
+
             } else {
                 if (!prepareMediaRecorder()) {
                     Toast.makeText(CollageMainActivity.this, "Fail in prepareMediaRecorder()!\n - Ended -", Toast.LENGTH_LONG).show();
@@ -617,9 +715,6 @@ public class CollageMainActivity extends Activity implements DownloadResultRecei
                 }
 
                 currentCapturedTime = 0;
-
-                vidLeft.setClickable(false);
-                vidRight.setClickable(false);
 
                 Runnable myRunnableThread = new CountDownRunner();
                 myThread = new Thread(myRunnableThread);
@@ -633,6 +728,7 @@ public class CollageMainActivity extends Activity implements DownloadResultRecei
                         try {
                             mediaRecorder.start();
                             isCaptured = true;
+                            switchCamera.setClickable(false);
 
 
                         } catch (final Exception ex) {
@@ -684,16 +780,17 @@ public class CollageMainActivity extends Activity implements DownloadResultRecei
     public void doWork() {
         runOnUiThread(new Runnable() {
             public void run() {
-                try{
-                    textView.setText("Time  " + capturedTime/10.0 +"/"+ currentCapturedTime/10.0);
+                try {
+                    textView.setText("Time  " + capturedTime / 10.0 + "/" + currentCapturedTime / 10.0);
 
                     currentCapturedTime++;
                     if (currentCapturedTime == capturedTime) {
                         captrureListener.onClick(capture);
-                        Effects2.initConfig(capturedTime/10.0);
+                        Effects2.initConfig(capturedTime / 10.0);
                     }
 
-                }catch (Exception e) {}
+                } catch (Exception e) {
+                }
             }
         });
     }
@@ -907,6 +1004,21 @@ public class CollageMainActivity extends Activity implements DownloadResultRecei
 
     public static interface OnFrameChangeListener{
         public void onFrameChange(int position);
+    }
+
+    public static void clearDir(File dir) {
+        try {
+            File[] files = dir.listFiles();
+            if (files != null)
+                for (File f : files) {
+                    if (f.isDirectory())
+                        clearDir(f);
+                    f.delete();
+                }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
 }

@@ -8,13 +8,11 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="20dp"
-        android:layout_marginTop="5dp"
         android:gravity="center"
         android:id="@+id/text_view"
         android:text="Time 0/0"/>
 
     <FrameLayout
-        android:layout_marginTop="5dp"
         android:id="@+id/frame_layout"
         android:layout_width="match_parent"
         android:layout_height="400dp">
@@ -171,23 +169,23 @@
 
         <Button
             android:id="@+id/button_ChangeCamera"
-            android:layout_width="wrap_content"
+            android:layout_width="120dp"
             android:layout_height="wrap_content"
             android:text="Switch Camera" />
 
         <Button
             android:id="@+id/button_capture"
-            android:layout_width="wrap_content"
+            android:layout_width="120dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
             android:text="Capture" />
 
-        <Button
+        <!--<Button
             android:id="@+id/rendersavebtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
-            android:text="Render/Save" />
+            android:text="Render/Save" />-->
     </LinearLayout>
 
 </LinearLayout>
