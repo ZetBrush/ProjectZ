@@ -4,6 +4,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.os.Environment;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -77,7 +79,7 @@ public class Effects2 {
            case R.drawable.frame3:
                transBitmapimmut = BitmapFactory.decodeResource(ctx.getResources(), currentframe);
                break;
-           case R.drawable.frame6:
+           case R.drawable.frame8:
                transBitmapimmut = BitmapFactory.decodeResource(ctx.getResources(), currentframe);
                break;
 
@@ -97,8 +99,41 @@ public class Effects2 {
                Bitmap source = BitmapFactory.decodeFile(source1path + String.format("%05d", i) + ".jpg");
                Bitmap source2 = BitmapFactory.decodeFile(source2path + String.format("%05d", i) + ".jpg");
 
-               canvas.drawBitmap(source, 11, 468, null);
-               canvas.drawBitmap(source2, 380, 12, null);
+              if(currentframe == R.drawable.picsintframe1) {
+                  canvas.drawBitmap(source, 11, 468, null);
+                  canvas.drawBitmap(source2, 380, 12, null);
+              }
+               else if(currentframe== R.drawable.frame3){
+                  Matrix matrix = new Matrix();
+                  matrix.postRotate(90);
+                  Bitmap rotatedsource = Bitmap.createBitmap(source, 0, 0,
+                          source.getWidth(), source.getHeight(),
+                          matrix, true);
+
+                  Bitmap rotatedsource2 = Bitmap.createBitmap(source2, 0, 0,
+                          source2.getWidth(), source2.getHeight(),
+                          matrix, true);
+                  canvas.drawBitmap(rotatedsource, 41, 342, new Paint());
+                  canvas.drawBitmap(rotatedsource2,450,340,new Paint());
+
+              }
+
+               else if(currentframe== R.drawable.frame8){
+                  Matrix matrix = new Matrix();
+                  matrix.postRotate(90);
+                  Bitmap rotatedsource = Bitmap.createBitmap(source, 0, 0,
+                          source.getWidth(), source.getHeight(),
+                          matrix, true);
+
+                  Bitmap rotatedsource2 = Bitmap.createBitmap(source2, 0, 0,
+                          source2.getWidth(), source2.getHeight(),
+                          matrix, true);
+                  canvas.drawBitmap(rotatedsource, 15, 13, new Paint());
+                  canvas.drawBitmap(rotatedsource2,461,385,new Paint());
+
+              }
+
+
 
                out = null;
                try {
